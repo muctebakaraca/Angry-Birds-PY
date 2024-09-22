@@ -1,0 +1,136 @@
+# (Put the necessary import statements first)
+from math import radians, tan, cos
+import random
+import matplotlib.pyplot as plt
+
+
+def trajectory_y(x, g, vo, angle):
+    """Returns (y-value) of the trajectory for a given x-val, gravity, initial velocity,and angle."""
+    angle = radians(angle)
+    return (x * tan(angle)) - (g * x ** 2) / (2 * (vo ** 2) * cos(angle) ** 2)
+
+def bird_picker():
+    print("Red = red, small bird; Chuck = yellow, small bird; Bomb = black, large bird; Terence = red, large bird")
+    while True:  # loops until num is 26
+        try:
+            check = input("Choose Your Bird: ")
+            bird = check.lower()
+            if bird == 'red':
+                bird = ('Red', 'r', 5)
+                return bird
+            if bird == 'chuck':
+                bird = ('Chuck', 'y', 5)
+                return bird
+            if bird == 'bomb':
+                bird = ('Bomb', 'k', 10)
+                return bird
+            if bird == 'terence':
+                bird = ('Terence', 'r', 10)
+                return bird
+            else:
+                raise ValueError
+
+        except ValueError:
+            print("Bad input!", end=" ")
+
+def planet_picker():
+    print("Earth = 9.807 m/s2, Mars = 3.711 m/s2, Moon = 1.625 m/s2, Jupiter = 24.79 m/s2")
+    while True:  # loops until num is 26
+        try:
+            check = input("Choose Your Planet: ")
+            planet = check.lower()
+            if planet == 'earth':
+                planet = 9.807
+                return planet
+            if planet == 'mars':
+                planet = 3.711
+                return planet
+            if planet == 'moon':
+                planet = 1.625
+                return planet
+            if planet == 'jupiter':
+                planet = 24.79
+                return planet
+            else:
+                raise ValueError
+
+        except ValueError:
+            print("Bad input!", end=" ")
+
+
+def get_guesses():
+    Speed = float(input("What speed is the bird flying at: "))
+    Angle = float(input("What angle is the bird flying at: "))
+    print()
+    return Speed, Angle
+
+
+def trajectory(g, vo, angle):
+    x = []
+    y = []
+    for i in range(1000):
+        x.append(i)
+        y.append(trajectory_y(i, g, vo, angle))
+    return x, y
+
+
+# detect if hit - checks if points within pos
+def hit(x, y, pos):
+    for i in range(len(x)):
+        if (pos[0] - x[i]) ** 2 + (pos[1] - y[i]) ** 2 <= (pos[2] / 2) ** 2:
+            return True
+    return False
+
+
+def birds_plot(x, y, pos, bird, check=False):
+    plt.axes().set_aspect('equal')
+    scaledown = 10 / plt.gcf().get_figwidth() * 2
+    plt.plot(x, y, color=bird[1], linestyle='--', linewidth=bird[2] / scaledown)
+    plt.plot(pos[0], pos[1], marker="o", color='#66FF00', markersize=pos[2] / scaledown)
+    plt.gca().set_ylim(bottom=0)
+    plt.gca().set_xlim(left=0)
+    if check:
+        plt.plot(pos[0], pos[1], marker='x', color='r', markersize=pos[2] * 1.1 / scaledown)
+    plt.show()
+    return check
+
+
+def get_basics():
+    """Takes user selections for active bird and planet. Returns (bird, planet). 'Bird' includes
+    name, color and size. 'Planet' includes name and gravity. """
+    a = bird_picker()  # Runs fn to provide bird menu
+    b = planet_picker()  # Runs fn to provide planet menu
+    return a, b
+
+# Sets up loop so user can repeat the game as many times as desired ('y' to continue, 'n' to quit)
+pig_counter = 0
+again = 'y'
+while again == 'y':
+
+    # Program will pick a random distance (x from 10-1000), height (y from 0-50) and size of a target
+    target = (random.randint(10, 1000), random.randint(0, 50), random.randint(10, 50))
+
+    # Takes initial guesses
+    bird, g = get_basics()  # Runs fn to get bird and planet information
+    v_guess, theta_guess = get_guesses()  # Runs fn to get velocity and angle guesses
+
+    # Loops guesses until bird hits target
+    x, y = trajectory(g, v_guess, theta_guess)  # Create current x- and y- value lists
+    while not hit(x, y, target):  # Program cycles until throw hits the target
+        birds_plot(x, y, target, bird)  # Plots trajectory & target if miss
+        v_guess, theta_guess = get_guesses()  # Gets updated guesses from user
+        x, y = trajectory(g, v_guess, theta_guess)  # Creates updated lists of x- and y-values
+
+    # Handles winning case and asks if user would like to play again
+    print('Yay!')
+    pig_counter += 1
+    birds_plot(x, y, target, bird, True)
+    again = input('Would you like to play again? (y/n)')
+    while again not in {'y', 'n'}:
+        again = input('Please type either y or n only. Would you like to play again? (y/n)')
+
+# Exiting when user decides to quit
+print(f'\nThanks for playing! You popped {pig_counter} pig(s) today!')
+
+
+
